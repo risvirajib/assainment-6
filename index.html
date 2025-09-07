@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GreenEarth – Plant a Tree</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <style>
+    .container-max{max-width:1200px;margin:0 auto}
+    .truncate-3{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  </style>
+</head>
+<body class="bg-white text-slate-800">
+
+  <header class="bg-green-700 text-white">
+    <div class="navbar container-max">
+      <div class="flex-1 font-bold text-xl">GreenEarth</div>
+      <nav class="flex gap-6">
+        <a href="#" class="hover:underline">Home</a>
+        <a href="#about" class="hover:underline">About</a>
+        <a href="#impact" class="hover:underline">Impact</a>
+        <a href="#faq" class="hover:underline">FAQ</a>
+      </nav>
+      <div class="flex items-center ml-[10px]">
+        <button class="btn btn-warning">Plant a Tree</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="relative bg-green-50 py-20 text-center">
+ <img src="assets/hero-leaf1.png" 
+     class="absolute left-0 top-10 h-[270px] w-auto  opacity-90" 
+     alt="leaf" />
+
+<img src="assets/hero-leaf2.png" 
+     class="absolute right-0 top-10 h-[270px] w-auto  opacity-90" 
+     alt="leaf" />
+
+
+    <h1 class="text-4xl font-bold mb-4">Plant a Tree, Grow a Future</h1>
+    <p class="mb-6">Join our mission to restore nature and fight climate change one tree at a time.</p>
+    <button class="btn btn-success">Get Started</button>
+  </section>
+
+  <main class="container-max flex gap-6 py-10">
+    <aside class="w-1/4">
+      <h3 class="font-bold mb-3">Categories</h3>
+      <ul id="categories" class="space-y-2"></ul>
+    </aside>
+
+    <section class="flex-1">
+      <div id="spinner" class="hidden flex justify-center py-10">
+        <span class="loading loading-dots loading-lg text-success"></span>
+      </div>
+      <div id="plants" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </section>
+
+    <aside class="w-1/4 bg-green-50 p-4 rounded">
+      <h3 class="font-bold mb-3">Your Cart</h3>
+      <ul id="cartList" class="space-y-2"></ul>
+      <div class="mt-4 font-bold">Total: $<span id="cartTotal">0</span></div>
+    </aside>
+  </main>
+
+  <section id="about" class="container-max flex flex-col md:flex-row items-center gap-8 py-16">
+    <img src="assets/about.png" class="w-1/2 rounded-lg shadow" alt="about" />
+    <div class="flex-1">
+      <h2 class="text-2xl font-bold mb-4">About the Campaign</h2>
+      <p>
+        GreenEarth is a global campaign to restore degraded landscapes by planting millions of trees. 
+        Each tree planted contributes to cleaner air, healthier soil, and a brighter future.
+      </p>
+    </div>
+  </section>
+
+  <section id="impact" class="bg-green-50 py-16">
+    <div class="container-max grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+      <div class="p-6 bg-white rounded-lg shadow">
+        
+        <h3 class="text-3xl font-bold">500K+</h3>
+        <p>Trees Planted</p>
+      </div>
+      <div class="p-6 bg-white rounded-lg shadow">
+        <h3 class="text-3xl font-bold">120+</h3>
+        <p>Communities Involved</p>
+      </div>
+      <div class="p-6 bg-white rounded-lg shadow">
+        <h3 class="text-3xl font-bold">30+</h3>
+        <p>Countries Reached</p>
+      </div>
+    </div>
+  </section>
+
+  
+
+  <section class="bg-green-700 py-16 text-white">
+    <div class="container-max text-center">
+      <h2 class="text-2xl font-bold mb-6">Plant a Tree Today</h2>
+      <form class="space-y-4 max-w-md mx-auto">
+        <input type="text" placeholder="Your Name" class="input input-bordered w-full" required />
+        <input type="email" placeholder="Your Email" class="input input-bordered w-full" required />
+        <input type="number" placeholder="Number of Trees" class="input input-bordered w-full" required />
+        <button class="btn btn-warning w-full">Donate Now</button>
+      </form>
+    </div>
+  </section>
+
+  <footer class="bg-green-900 text-white py-6 text-center">
+    © 2025 GreenEarth. All Rights Reserved.
+  </footer>
+
+  <dialog id="plantModal" class="modal">
+    <div class="modal-box">
+      <h3 id="modalTitle" class="font-bold text-lg"></h3>
+      <img id="modalImg" class="w-full h-48 object-cover my-4" />
+      <p id="modalDesc"></p>
+      <div class="modal-action">
+        <form method="dialog">
+          <button class="btn">Close</button>
+        </form>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    const categoriesEl = document.getElementById('categories');
+    const plantsEl = document.getElementById('plants');
+    const cartList = document.getElementById('cartList');
+    const cartTotalEl = document.getElementById('cartTotal');
+    const spinner = document.getElementById('spinner');
+
+    let cart = [];
+
+    async function loadCategories(){
+      const res = await fetch('https://openapi.programming-hero.com/api/categories');
+      const data = await res.json();
+
+      console.log("Categories API Data:", data);
+
+      categoriesEl.innerHTML = '';
+      const allBtn = createCategoryBtn({category_name:'All Trees', id:'all'});
+      categoriesEl.appendChild(allBtn);
+
+      data.categories.forEach(cat=>{
+        const btn = createCategoryBtn(cat);
+        categoriesEl.appendChild(btn);
+      });
+
+      allBtn.click();
+    }
+
+    function createCategoryBtn(cat){
+      const btn = document.createElement('button');
+      btn.className = 'w-full text-left px-3 py-1 rounded hover:bg-green-100 text-slate-700'; 
+      btn.innerText = cat.category_name || cat.category; 
+
+      btn.onclick = ()=>{
+        document.querySelectorAll('#categories button').forEach(b=>{
+          b.classList.remove('bg-green-600','text-white','font-semibold');
+          b.classList.add('text-slate-700');
+        });
+
+        btn.classList.add('bg-green-600','text-white','font-semibold');
+        btn.classList.remove('text-slate-700');
+
+        if(cat.id==='all') loadPlants();
+        else loadPlants(cat.id);
+      };
+
+      return btn;
+    }
+
+    async function loadPlants(catId){
+      spinner.classList.remove('hidden');
+      plantsEl.innerHTML = '';
+      let url = 'https://openapi.programming-hero.com/api/plants';
+      if(catId) url = `https://openapi.programming-hero.com/api/category/${catId}`;
+      const res = await fetch(url);
+      const data = await res.json();
+
+      console.log("Plants API Data:", data);
+
+      const plants = data.plants || data.data || [];
+      plants.forEach(p=> renderPlant(p));
+      spinner.classList.add('hidden');
+    }
+
+    function renderPlant(p){
+      const card = document.createElement('div');
+      card.className = 'card bg-base-100 shadow';
+      card.innerHTML = `
+        <figure><img src="${p.image}" alt="${p.name}" class="h-40 w-full object-cover" /></figure>
+        <div class="card-body">
+          <h2 class="card-title text-green-700 cursor-pointer">${p.name}</h2>
+          <p class="truncate-3">${p.description}</p>
+          <p class="text-sm">Category: ${p.category}</p>
+          <p class="font-bold">$${p.price}</p>
+          <div class="card-actions justify-end">
+            <button class="btn btn-sm btn-success">Add to Cart</button>
+          </div>
+        </div>`;
+
+      card.querySelector('.card-title').onclick=()=>openModal(p.id);
+      card.querySelector('button').onclick=()=>addToCart(p);
+      plantsEl.appendChild(card);
+    }
+
+    async function openModal(id){
+      const res = await fetch(`https://openapi.programming-hero.com/api/plant/${id}`);
+      const data = await res.json();
+      const plant = data.plant || data.data;
+      document.getElementById('modalTitle').innerText = plant.name;
+      document.getElementById('modalImg').src = plant.image;
+      document.getElementById('modalDesc').innerText = plant.description;
+      plantModal.showModal();
+    }
+
+    function addToCart(p){
+      cart.push(p);
+      renderCart();
+    }
+
+    function renderCart(){
+      cartList.innerHTML='';
+      let total=0;
+      cart.forEach((p,i)=>{
+        total+=p.price;
+        const li=document.createElement('li');
+        li.className='flex justify-between items-center bg-white p-2 rounded';
+        li.innerHTML=`<span>${p.name}</span><button class='text-red-500'>❌</button>`;
+        li.querySelector('button').onclick=()=>removeFromCart(i);
+        cartList.appendChild(li);
+      });
+      cartTotalEl.innerText=total;
+    }
+
+    function removeFromCart(i){
+      cart.splice(i,1);
+      renderCart();
+    }
+
+    loadCategories();
+  </script>
+</body>
+</html>
